@@ -1,67 +1,118 @@
+
 from pydantic import BaseModel
 from fastapi import HTTPException, Response, Depends
 import sqlalchemy as sa
 import datetime
+from fastapi.encoders import jsonable_encoder
+from typing import List
+import json
+from datetime import datetime as dt
+from app.dependencies.autentication import Autentication
 
 from app.dependencies.get_db_session import get_db_session
-from app.api_models import BaseResponseModel
-from app.models.transaksi_in import Transaksi_in
-from sqlalchemy.orm import Session
+
+from app.models.barang import Barang
+from app.models.purchase_order import Purchase_order
+from app.models.standar_doc import StandarDoc
+from app.models.user_log import UserLog
+
 from app.utils.db import db_engine
 
 
 class AddTransaksiInData(BaseModel):
     no_daftar: str
-    tanggal_daftar: datetime.date
+    no_pengajuan: str
+    tanggal_daftar: str
     id_suplier: int
     kode_barang: str
     id_po: int
     jumlah: int
-    tanggal: datetime.date
+    harga_satuan: float
     saldo_jml: int
     no_sppb: str
-    tanggal_sppb: datetime.date
-    no_invoice: str
-    tanggal_invoice: datetime.date
+    tanggal_sppb: str
+    nomor_invoice: str
+    tanggal_invoice: str
     jenis: str
     vlauta: str
-    exchane_rate: int
-    total_harga_invoice: int
-    discount: int
-    freight: int
-    tanggal_jatuh_tempo: datetime.date
-    grad_total: int
+    exchane_rate: float
+    total_harga_invoice: float
+    discount: float
+    freight: float
+    lokasi: str
+
+    grad_total: float
+    administrasi_import_idr: float
+    pabean: float
+    pembayaran: str
 
 
-async def create_transaksi_in(data: AddTransaksiInData, session=Depends(get_db_session)):
+async def create_transaksi_in(data: AddTransaksiInData,  payload=Depends(Autentication()), session=Depends(get_db_session)):
 
-    with Session(db_engine) as session:
-        transaksi_in = Transaksi_in(
-            no_daftar=data.no_daftar,
-            tanggal_daftar=data.tanggal_daftar,
-            id_user=1,
-            id_suplier=data.id_suplier,
-            kode_barang=data.kode_barang,
-            id_po=data.id_po,
-            jumlah=data.jumlah,
-            tanggal=data.tanggal,
-            saldo_jml=data.saldo_jml,
-            no_sppb=data.no_sppb,
-            tanggal_sppb=data.tanggal_sppb,
-            no_invoice=data.no_invoice,
-            tanggal_invoice=data.tanggal_invoice,
-            jenis=data.jenis,
-            vlauta=data.vlauta,
-            exchane_rate=data.exchane_rate,
-            total_harga_invoice=data.total_harga_invoice,
-            discount=data.discount,
-            freight=data.freight,
-            tanggal_jatuh_tempo=data.tanggal_jatuh_tempo,
-            grad_total=data.grad_total,
+    NOW = dt.now()
 
+    today = NOW.strftime("%Y-%m-%d")
 
-        )
-        session.add(transaksi_in)
-        session.commit()
+    values_to_update1 = {}
+    values_to_update1.update({'done': True})
+    result = session.execute(
+        sa.update(Purchase_order).values(
+            **values_to_update1).where(Purchase_order.id_po == data.id_po)
+    )
+    if result.rowcount == 0:
+        raise HTTPException(400, detail='Transaksi in not found')
 
-        return Response(status_code=204)
+    result = session.execute(
+        sa.update(StandarDoc).values(
+            **values_to_update1).where(StandarDoc.nomor == data.no_daftar)
+    )
+    if result.rowcount == 0:
+        raise HTTPException(400, detail='Transaksi in not found')
+
+    session.commit()
+
+    print(today)
+    # generate akun dan nominal dari client
+    a = data.pembayaran.replace("'", '"')
+    # print(a)
+    # data_str = f"""{a}"""
+    # data_pembayaran = json.loads(data_str)
+    # for bayar in data_pembayaran["data"]:
+    #     print(bayar)
+
+    # ambil saldo barang
+    saldoBarang = session.execute(
+        sa.select(
+            Barang.saldo
+        ).where(Barang.kode_barang == data.kode_barang)
+    ).scalar()
+    print(saldoBarang)
+    # # update saldo barang
+    newSaldo = data.jumlah + saldoBarang
+    values_to_update = {'saldo': newSaldo}
+
+    # result = session.execute(
+    #     sa.update(Barang).values(
+    #         **values_to_update).where(Barang.kode_barang == data.kode_barang)
+    # )
+
+    if result.rowcount == 0:
+        raise HTTPException(400, detail='Barang not found')
+
+    # sql = f"INSERT INTO transaksi_in(no_pengajuan, no_daftar, tanggal_daftar, id_suplier, id_user, kode_barang, jumlah, tanggal, saldo_jml, id_po, no_sppb, tanggal_sppb, nomor_invoice, tanggal_invoice, jenis, vlauta, exchange_rate, total_harga_invoice, discount, freight, tanggal_jatuh_tempo, grand_total, harga_satuan)VALUES('{data.no_pengajuan}', '{data.no_daftar}', '{data.tanggal_daftar}', {data.id_suplier}, 1, '{data.kode_barang}', {data.jumlah}', '{today}', {newSaldo}, {data.id_po}, '{data.no_sppb}', '{data.tanggal_sppb}', '{data.nomor_invoice}', '{data.tanggal_invoice}', '{data.jenis}', '{data.vlauta}', {data.exchane_rate}, {data.total_harga_invoice}, {data.discount}, {data.freight}, '{today}', {data.grad_total},{data.harga_satuan})"
+    sql = f"""
+INSERT INTO gudang1.transaksi_in
+(no_pengajuan, no_daftar, tanggal_daftar, id_suplier, id_user, kode_barang, jumlah, tanggal, saldo_jml, id_po, no_sppb, tanggal_sppb, nomor_invoice, tanggal_invoice, jenis, vlauta, exchange_rate, total_harga_invoice, discount, freight, tanggal_jatuh_tempo, grand_total, harga_satuan ,lokasi, administrasi_import, pabean)
+VALUES('{data.no_pengajuan}', '{data.no_daftar}', '{data.tanggal_daftar}', {data.id_suplier}, 1, '{data.kode_barang}', {data.jumlah}, '{today}', {newSaldo}, {data.id_po}, '{data.no_sppb}', '{data.tanggal_sppb}', '{data.nomor_invoice}', '{data.tanggal_invoice}', '{data.jenis}', '{data.vlauta}', {data.exchane_rate}, {data.total_harga_invoice}, {data.discount}, {data.freight}, '{today}', {data.grad_total}, {data.harga_satuan}, '{data.lokasi}',{data.administrasi_import_idr}, {data.pabean});
+    """
+
+    session.execute(sa.text(sql))
+
+    user_id = payload.get('uid', 0)
+    user_log = UserLog(
+        id_user=user_id, jenis='t_in_add', keterangan=f"memncatat dokumen pemasukan {data.jenis} no: -{data.no_daftar}", id_doc=data.no_daftar)
+
+    session.add(user_log)
+    session.commit()
+
+    return Response(status_code=204)

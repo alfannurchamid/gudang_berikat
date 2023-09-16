@@ -16,8 +16,8 @@ class GetAkunData(BaseModel):
 class GetAkunResponseModel(BaseModel):
     id_akun: str
     nama_akun: str
-    kategori_akun: str
     pos_akun_debit: bool
+    saldo: int
 
 
 class GetAkunDataResponsemodel(BaseResponseModel):
@@ -29,8 +29,7 @@ class GetAkunDataResponsemodel(BaseResponseModel):
                 'data': {
                     'id_akun': '1',
                     'nama_akun': 'Contoh Nama akun',
-                    'pos_kredit_akun': True,
-                    'kategori_akun': 'sumber'
+                    'pos_kredit_akun': True
                 },
                 'meta': {},
                 'success': True,
@@ -44,14 +43,14 @@ async def get_data_akun(data: GetAkunData, session=Depends(get_db_session)):
     response = session.execute(
         sa.select(
             Akun.nama_akun,
-            Akun.kategori_akun,
-            Akun.pos_akun_debit
+            Akun.pos_akun_debit,
+            Akun.saldo
         ).where(Akun.id_akun == data.id_akun)
     ).fetchone()
 
     return GetAkunDataResponsemodel(data=GetAkunResponseModel(
         id_akun=data.id_akun,
         nama_akun=response.nama_akun,
-        kategori_akun=response.kategori_akun,
-        pos_akun_debit=response.pos_akun_debit
+        pos_akun_debit=response.pos_akun_debit,
+        saldo=response.saldo
     ))

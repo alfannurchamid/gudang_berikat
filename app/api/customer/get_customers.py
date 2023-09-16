@@ -23,8 +23,8 @@ class GetCustomersDataResponsemodel(BaseResponseModel):
             'example': {
                 'data': {
                     'data': [{
+                        'id_customer': '1',
                         'nama_customer': 'Contoh Nama customer',
-                        'asal_negara': 'CN'
                     }],
                 },
                 'meta': {},

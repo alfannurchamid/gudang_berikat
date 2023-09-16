@@ -44,7 +44,7 @@ async def auth_refresh_token(data: RefreshTokenData, session=Depends(get_db_sess
     user_login = session.execute(
         sa.select(
             UserLogin.id,
-            User.id.label('user_id'),
+            User.id_user.label('user_id'),
             User.username,
             sa.func.if_(
                 UserLogin.expired_at > sa.func.NOW(), 0, 1
@@ -52,7 +52,7 @@ async def auth_refresh_token(data: RefreshTokenData, session=Depends(get_db_sess
                 'expired'
             )
         ).where(
-            UserLogin.user_id == User.id,
+            UserLogin.user_id == User.id_user,
             UserLogin.refresh_token == data.refresh_token
         )
     ).fetchone()

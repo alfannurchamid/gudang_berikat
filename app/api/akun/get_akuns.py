@@ -39,16 +39,12 @@ class GetAkunsDataResponsemodel(BaseResponseModel):
 
 async def get_data_akuns(session=Depends(get_db_session)):
     response = session.execute(
-        sa.select(
-            Akun.id_akun,
-            Akun.nama_akun,
-            Akun.kategori_akun,
-            Akun.pos_akun_debit
-        )
+        sa.text("SELECT * FROM akun")
     ).all()
     datalist = []
 
     for Akuna in response:
+        # print(Akuna.pos_akun_debit)
         datalist.append(Akuna)
 
     return GetAkunsDataResponsemodel(data=GetAkunsResponseModel(

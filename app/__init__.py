@@ -33,8 +33,8 @@ class MyMiddleWare(BaseHTTPMiddleware):
 #           "https://bspnwonosobo.com", "https://bspnwonosobo.com/", "https://localhost:3000"]
 
 
-origin = ["http://localhost:8000",
-          "https://bspnwonosobo.com", "https://bspnwonosobo.com/", "http://localhost:3000"]
+origin = ["http://localhost:8000", "http://89.116.179.69:3060", "http://89.116.179.69:80", "http://localhost:3001",
+          "https://lestariberkahsae.com", "http://127.0.0.1:3001"]
 app.add_middleware(MyMiddleWare)
 app.add_middleware(CORSMiddleware, allow_origins=origin,
                    allow_credentials=True,

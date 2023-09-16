@@ -45,9 +45,11 @@ async def get_data_barangs(session=Depends(get_db_session)):
             Barang.kode_barang,
             Barang.nama_barang,
             Barang.harga,
-            Barang.lokasi,
             Barang.saldo,
-            Barang.satuan
+            Barang.satuan,
+            Barang.bm,
+            Barang.ppn,
+            Barang.pph
         )
     ).all()
     datalist = []

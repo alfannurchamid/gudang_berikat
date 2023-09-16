@@ -7,6 +7,8 @@ from typing import List
 from app.dependencies.get_db_session import get_db_session
 from app.api_models import BaseResponseModel
 from app.models.purchase_order import Purchase_order
+from app.models.barang import Barang
+from app.models.suplier import Suplier
 from sqlalchemy.orm import Session
 from app.utils.db import db_engine
 
@@ -35,6 +37,9 @@ class GetPurchaseOrdersDataResponsemodel(BaseResponseModel):
                         "id_akun_payment": 2,
                         "discount": 1,
                         "ppn": 12,
+                        "exrate": 15000,
+                        "grand_total": 624518,
+                        "nomorpo": "7239417"
                     }],
                 },
                 'meta': {},
@@ -45,26 +50,15 @@ class GetPurchaseOrdersDataResponsemodel(BaseResponseModel):
         }
 
 
+sql = "SELECT * FROM purchase_order JOIN baarang on  purchase_order.kode_barang = baarang.kode_barang JOIN suplier on  purchase_order.id_suplier = suplier.id_suplier ORDER BY done"
+
+
 async def get_data_purchase_orders(session=Depends(get_db_session)):
-    response = session.execute(
-        sa.select(
-            Purchase_order.id_po,
-            Purchase_order.tgl_po,
-            Purchase_order.id_suplier,
-            Purchase_order.tgl_minta_kirim,
-            Purchase_order.kode_barang,
-            Purchase_order.jumlah_order,
-            Purchase_order.harga_satuan,
-            Purchase_order.remark,
-            Purchase_order.vlauta,
-            Purchase_order.id_akun_payment,
-            Purchase_order.discount,
-            Purchase_order.ppn,
-        )
-    ).all()
+    response = session.execute(sa.text(sql))
     datalist = []
 
     for Custome in response:
+        # print("tes")
         datalist.append(Custome)
 
     return GetPurchaseOrdersDataResponsemodel(data=GetPurchaseOrdersResponseModel(
