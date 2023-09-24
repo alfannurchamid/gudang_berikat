@@ -63,6 +63,14 @@ async def edit_Transaksi_out_acc(data: EditTransaksiInData, payload=Depends(Aute
             **values_to_update).where(Transaksi_out.no_daftar == data.no_daftar)
     )
 
+    # TRANSAKSI IN DECLARASI NOMOR DAN UPDATE STATUS OUT
+    no_daftar_in = data_dok[4]
+    values_to_update = {'out': True}
+    result = session.execute(
+        sa.update(Transaksi_in).values(
+            **values_to_update).where(Transaksi_in.no_daftar == no_daftar_in )
+    )
+
     if result.rowcount == 0:
         raise HTTPException(400, detail='Pengajuan not found')
 
@@ -76,11 +84,11 @@ async def edit_Transaksi_out_acc(data: EditTransaksiInData, payload=Depends(Aute
     session.commit()
     session.delete(reg_jurnal)
 
-    no_daftar_in = data_dok[4]
     data_dok_in = session.execute(sa.text(
         f"""SELECT grand_total,jumlah, exchange_rate FROM transaksi_in WHERE no_daftar = '{no_daftar_in}'""")).fetchone()
 
     # print(data_dok_in)
+    # update acc doc in jadi 2
 
     # data baranhg
     barang = session.execute(

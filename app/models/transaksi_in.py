@@ -42,6 +42,7 @@ class Transaksi_in(Base):
     grad_total = sa.Column('grand_total', sa.Float)
     done = sa.Column('done', sa.Boolean, default=False)
     acc = sa.Column('acc', sa.Boolean, default=False)
+    out = sa.Column('out', sa.Boolean, default=False)
     lokasi = sa.Column('lokasi', sa.String)
     administrasi_import = sa.Column('administrasi_import', sa.Float)
     pabean = sa.Column('pabean', sa.Float)

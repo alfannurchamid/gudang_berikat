@@ -48,7 +48,9 @@ class GetTransaksiinsDataResponsemodel(BaseResponseModel):
                         "discount": 0,
                         "freight": 0,
                         "tanggal_jatuh_tempo": "2023-01-12",
-                        "grad_total": 44599
+                        "grad_total": 44599,
+                        "acc": True,
+                        "out": True
                     }],
                 },
                 'meta': {},
